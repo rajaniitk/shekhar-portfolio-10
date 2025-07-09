@@ -37,33 +37,33 @@ class DataProcessor:
             if df is None:
                 return {'success': False, 'error': 'Failed to parse file'}
             
-            # Create dataset record
-            dataset = Dataset(
-                filename=filename,
-                original_filename=file.filename,
-                file_path=file_path,
-                file_size=os.path.getsize(file_path),
-                file_type=filename.rsplit('.', 1)[1].lower(),
-                rows=len(df),
-                columns=len(df.columns),
-                memory_usage=float(df.memory_usage(deep=True).sum()),
-                column_info=self.get_column_info(df),
-                data_types=df.dtypes.astype(str).to_dict(),
-                missing_values=df.isnull().sum().to_dict()
-            )
-            
-            db.session.add(dataset)
-            db.session.commit()
+            # Get data info that matches the model structure
+            column_info = self.get_column_info(df)
+            data_types = df.dtypes.astype(str).to_dict()
+            missing_values = df.isnull().sum().to_dict()
             
             return {
                 'success': True,
-                'dataset_id': dataset.id,
+                'file_type': filename.rsplit('.', 1)[1].lower(),
+                'rows': len(df),
+                'columns': len(df.columns),
+                'column_names': df.columns.tolist(),
+                'data_types': data_types,
+                'missing_values': missing_values,
                 'preview': self.get_preview_data(df),
-                'info': self.get_dataset_info_dict(dataset, df)
+                'info': {
+                    'filename': file.filename,
+                    'rows': len(df),
+                    'columns': len(df.columns),
+                    'file_size': os.path.getsize(file_path),
+                    'missing_values': missing_values,
+                    'data_types': data_types,
+                    'column_names': df.columns.tolist()
+                }
             }
             
         except Exception as e:
-            current_app.logger.error(f"Upload processing error: {str(e)}")
+            logging.error(f"Upload processing error: {str(e)}")
             return {'success': False, 'error': str(e)}
     
     def parse_file(self, file_path, filename):
@@ -82,7 +82,7 @@ class DataProcessor:
                 return None
                 
         except Exception as e:
-            current_app.logger.error(f"File parsing error: {str(e)}")
+            logging.error(f"File parsing error: {str(e)}")
             return None
     
     def get_column_info(self, df):
@@ -106,46 +106,49 @@ class DataProcessor:
             'dtypes': df.dtypes.astype(str).to_dict()
         }
     
-    def get_dataset_info_dict(self, dataset, df):
-        return {
-            'filename': dataset.original_filename,
-            'rows': dataset.rows,
-            'columns': dataset.columns,
-            'memory_usage': dataset.memory_usage,
-            'file_size': dataset.file_size,
-            'missing_values': dataset.missing_values,
-            'data_types': dataset.data_types,
-            'column_info': dataset.column_info
-        }
-    
-    def get_preview(self, dataset_id):
+    def get_preview(self, file_path):
         try:
-            dataset = Dataset.query.get_or_404(dataset_id)
-            df = self.load_dataset(dataset)
+            # Use file_path directly instead of dataset_id
+            filename = os.path.basename(file_path)
+            df = self.parse_file(file_path, filename)
+            if df is None:
+                return {'success': False, 'error': 'Failed to load dataset'}
             return {
                 'success': True,
                 'preview': self.get_preview_data(df)
             }
         except Exception as e:
-            current_app.logger.error(f"Preview error: {str(e)}")
+            logging.error(f"Preview error: {str(e)}")
             return {'success': False, 'error': str(e)}
     
-    def get_dataset_info(self, dataset_id):
+    def get_dataset_info(self, file_path):
         try:
-            dataset = Dataset.query.get_or_404(dataset_id)
-            df = self.load_dataset(dataset)
+            filename = os.path.basename(file_path)
+            df = self.parse_file(file_path, filename)
+            if df is None:
+                return {'success': False, 'error': 'Failed to load dataset'}
             return {
                 'success': True,
-                'info': self.get_dataset_info_dict(dataset, df)
+                'info': {
+                    'filename': filename,
+                    'rows': len(df),
+                    'columns': len(df.columns),
+                    'file_size': os.path.getsize(file_path),
+                    'missing_values': df.isnull().sum().to_dict(),
+                    'data_types': df.dtypes.astype(str).to_dict(),
+                    'column_names': df.columns.tolist()
+                }
             }
         except Exception as e:
-            current_app.logger.error(f"Dataset info error: {str(e)}")
+            logging.error(f"Dataset info error: {str(e)}")
             return {'success': False, 'error': str(e)}
     
-    def get_columns(self, dataset_id):
+    def get_columns_info(self, file_path):
         try:
-            dataset = Dataset.query.get_or_404(dataset_id)
-            df = self.load_dataset(dataset)
+            filename = os.path.basename(file_path)
+            df = self.parse_file(file_path, filename)
+            if df is None:
+                return {'success': False, 'error': 'Failed to load dataset'}
             
             columns_info = []
             for col in df.columns:
@@ -166,20 +169,38 @@ class DataProcessor:
                 'columns': columns_info
             }
         except Exception as e:
-            current_app.logger.error(f"Columns error: {str(e)}")
+            logging.error(f"Columns error: {str(e)}")
             return {'success': False, 'error': str(e)}
     
-    def load_dataset(self, dataset):
+    def get_sample_data(self, file_path):
         try:
-            return self.parse_file(dataset.file_path, dataset.filename)
+            filename = os.path.basename(file_path)
+            df = self.parse_file(file_path, filename)
+            if df is None:
+                return {'success': False, 'error': 'Failed to load dataset'}
+            
+            sample_size = min(100, len(df))
+            sample_df = df.sample(n=sample_size)
+            
+            return {
+                'success': True,
+                'sample': sample_df.to_dict('records'),
+                'columns': df.columns.tolist(),
+                'sample_size': sample_size,
+                'total_rows': len(df)
+            }
         except Exception as e:
-            current_app.logger.error(f"Dataset loading error: {str(e)}")
-            raise e
+            logging.error(f"Sample data error: {str(e)}")
+            return {'success': False, 'error': str(e)}
     
-    def clean_data(self, dataset_id, options):
+    def clean_data(self, file_path, options):
         try:
-            dataset = Dataset.query.get_or_404(dataset_id)
-            df = self.load_dataset(dataset)
+            filename = os.path.basename(file_path)
+            df = self.parse_file(file_path, filename)
+            if df is None:
+                return {'success': False, 'error': 'Failed to load dataset'}
+            
+            stats = {'original_shape': df.shape}
             
             # Handle missing values
             if options.get('handle_missing'):
@@ -213,46 +234,24 @@ class DataProcessor:
                         upper_bound = Q3 + 1.5 * IQR
                         df = df[(df[col] >= lower_bound) & (df[col] <= upper_bound)]
             
-            # Save cleaned data
-            cleaned_path = dataset.file_path.replace('.', '_cleaned.')
-            df.to_csv(cleaned_path, index=False)
+            stats['cleaned_shape'] = df.shape
+            stats['rows_removed'] = stats['original_shape'][0] - stats['cleaned_shape'][0]
             
-            # Update dataset record
-            dataset.file_path = cleaned_path
-            dataset.rows = len(df)
-            dataset.columns = len(df.columns)
-            dataset.memory_usage = float(df.memory_usage(deep=True).sum())
-            dataset.column_info = self.get_column_info(df)
-            dataset.data_types = df.dtypes.astype(str).to_dict()
-            dataset.missing_values = df.isnull().sum().to_dict()
-            
-            db.session.commit()
+            # Save cleaned data (overwrites original for simplicity)
+            if file_path.endswith('.csv'):
+                df.to_csv(file_path, index=False)
+            elif file_path.endswith('.xlsx'):
+                df.to_excel(file_path, index=False)
+            elif file_path.endswith('.json'):
+                df.to_json(file_path, orient='records')
+            elif file_path.endswith('.parquet'):
+                df.to_parquet(file_path, index=False)
             
             return {
                 'success': True,
-                'message': 'Data cleaned successfully',
-                'new_shape': df.shape,
-                'preview': self.get_preview_data(df)
+                'stats': stats
             }
             
         except Exception as e:
-            current_app.logger.error(f"Data cleaning error: {str(e)}")
-            return {'success': False, 'error': str(e)}
-    
-    def delete_dataset(self, dataset_id):
-        try:
-            dataset = Dataset.query.get_or_404(dataset_id)
-            
-            # Delete file
-            if os.path.exists(dataset.file_path):
-                os.remove(dataset.file_path)
-            
-            # Delete database record
-            db.session.delete(dataset)
-            db.session.commit()
-            
-            return {'success': True, 'message': 'Dataset deleted successfully'}
-            
-        except Exception as e:
-            current_app.logger.error(f"Dataset deletion error: {str(e)}")
+            logging.error(f"Data cleaning error: {str(e)}")
             return {'success': False, 'error': str(e)}

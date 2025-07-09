@@ -10,7 +10,7 @@
     <p>Select a CSV, Excel, JSON, or Parquet file to begin your analysis.</p>
 
     <!-- The form action will submit to your Flask route -->
-    <form id="upload-form" action="{{ url_for('data_processor.upload_file') }}" method="post" enctype="multipart/form-data"  data-action-url="{{ url_for('data_processor.upload_file') }}"></form>>
+    <form id="upload-form" action="{{ url_for('data_processor.upload_file') }}" method="post" enctype="multipart/form-data" data-action-url="{{ url_for('data_processor.upload_file') }}">
         <div class="form-group">
             <label for="file-upload" class="file-upload-label">
                 Choose File
