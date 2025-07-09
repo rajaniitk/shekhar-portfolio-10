@@ -1,0 +1,1157 @@
+{% extends "base.html" %}
+
+{% block title %}Feature Engineering - EDA Application{% endblock %}
+
+{% block page_title %}Feature Engineering{% endblock %}
+{% block page_subtitle %}Transform and create new features to improve your data quality{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="{{ url_for('index') }}">Dashboard</a>
+</li>
+<li class="breadcrumb-item active">Feature Engineering</li>
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <button class="btn btn-outline-light" onclick="loadDatasetSelector()">
+        <i class="fas fa-database me-2"></i>Select Dataset
+    </button>
+    <button class="btn btn-primary" onclick="applyAllTransformations()" id="applyAllBtn" disabled>
+        <i class="fas fa-magic me-2"></i>Apply All
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Dataset Selection -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card glass-card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-database me-2"></i>Select Dataset
+                            </label>
+                            <select class="form-control" id="datasetSelect" onchange="loadDataset()">
+                                <option value="">Choose a dataset...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div id="datasetInfo" class="dataset-info" style="display: none;">
+                            <div class="info-item">
+                                <strong>Rows:</strong> <span id="datasetRows">-</span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Columns:</strong> <span id="datasetColumns">-</span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Size:</strong> <span id="datasetSize">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Transformation Controls -->
+        <div class="card glass-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cogs me-2"></i>Transformations
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Tabs for different transformation types -->
+                <ul class="nav nav-tabs mb-3" id="transformationTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#scaling" onclick="switchTab('scaling')">
+                            <i class="fas fa-expand-arrows-alt me-2"></i>Scaling
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#encoding" onclick="switchTab('encoding')">
+                            <i class="fas fa-code me-2"></i>Encoding
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#binning" onclick="switchTab('binning')">
+                            <i class="fas fa-boxes me-2"></i>Binning
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#transform" onclick="switchTab('transform')">
+                            <i class="fas fa-function me-2"></i>Transform
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="transformationTabContent">
+                    <!-- Scaling Tab -->
+                    <div class="tab-pane fade show active" id="scaling" role="tabpanel">
+                        <form id="scalingForm" onsubmit="applyScaling(event)">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Select Columns</label>
+                                        <select class="form-control" id="scalingColumns" multiple>
+                                            <option value="">Load dataset first...</option>
+                                        </select>
+                                        <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple columns</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Scaling Method</label>
+                                        <select class="form-control" id="scalingMethod">
+                                            <option value="standard">Standard Scaling (Z-score)</option>
+                                            <option value="minmax">Min-Max Scaling</option>
+                                            <option value="robust">Robust Scaling</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-expand-arrows-alt me-2"></i>Apply Scaling
+                                </button>
+                                <button type="button" class="btn btn-outline-light" onclick="previewTransformation('scaling')">
+                                    <i class="fas fa-eye me-2"></i>Preview
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Encoding Tab -->
+                    <div class="tab-pane fade" id="encoding" role="tabpanel">
+                        <form id="encodingForm" onsubmit="applyEncoding(event)">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Select Columns</label>
+                                        <select class="form-control" id="encodingColumns" multiple>
+                                            <option value="">Load dataset first...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Encoding Method</label>
+                                        <select class="form-control" id="encodingMethod">
+                                            <option value="onehot">One-Hot Encoding</option>
+                                            <option value="label">Label Encoding</option>
+                                            <option value="frequency">Frequency Encoding</option>
+                                            <option value="target">Target Encoding</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-code me-2"></i>Apply Encoding
+                                </button>
+                                <button type="button" class="btn btn-outline-light" onclick="previewTransformation('encoding')">
+                                    <i class="fas fa-eye me-2"></i>Preview
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Binning Tab -->
+                    <div class="tab-pane fade" id="binning" role="tabpanel">
+                        <form id="binningForm" onsubmit="applyBinning(event)">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="form-label">Select Columns</label>
+                                        <select class="form-control" id="binningColumns" multiple>
+                                            <option value="">Load dataset first...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="form-label">Binning Method</label>
+                                        <select class="form-control" id="binningMethod">
+                                            <option value="equal_width">Equal Width</option>
+                                            <option value="equal_frequency">Equal Frequency</option>
+                                            <option value="kmeans">K-Means</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="form-label">Number of Bins</label>
+                                        <input type="number" class="form-control" id="binningBins" value="5" min="2" max="20">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-boxes me-2"></i>Apply Binning
+                                </button>
+                                <button type="button" class="btn btn-outline-light" onclick="previewTransformation('binning')">
+                                    <i class="fas fa-eye me-2"></i>Preview
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Transform Tab -->
+                    <div class="tab-pane fade" id="transform" role="tabpanel">
+                        <form id="transformForm" onsubmit="applyTransform(event)">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Select Columns</label>
+                                        <select class="form-control" id="transformColumns" multiple>
+                                            <option value="">Load dataset first...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Transform Method</label>
+                                        <select class="form-control" id="transformMethod">
+                                            <option value="log">Log Transform</option>
+                                            <option value="sqrt">Square Root</option>
+                                            <option value="reciprocal">Reciprocal</option>
+                                            <option value="square">Square</option>
+                                            <option value="boxcox">Box-Cox</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-function me-2"></i>Apply Transform
+                                </button>
+                                <button type="button" class="btn btn-outline-light" onclick="previewTransformation('transform')">
+                                    <i class="fas fa-eye me-2"></i>Preview
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview/Results -->
+        <div id="previewSection" class="card glass-card mt-4" style="display: none;">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-eye me-2"></i>Preview Results
+                </h5>
+                <div class="card-controls">
+                    <button class="btn btn-sm btn-success" onclick="confirmTransformation()" id="confirmBtn" style="display: none;">
+                        <i class="fas fa-check me-1"></i>Confirm
+                    </button>
+                    <button class="btn btn-sm btn-outline-light" onclick="closePreview()">
+                        <i class="fas fa-times me-1"></i>Close
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="previewContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Applied Transformations -->
+        <div class="card glass-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>Applied Transformations
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="appliedTransformations">
+                    <div class="text-center text-muted">
+                        <i class="fas fa-magic" style="font-size: 2rem;"></i>
+                        <p class="mt-2">No transformations applied yet</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Column Information -->
+        <div class="card glass-card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-columns me-2"></i>Column Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="columnInfo">
+                    <div class="text-center text-muted">
+                        <i class="fas fa-table" style="font-size: 2rem;"></i>
+                        <p class="mt-2">Select a dataset to view column info</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="card glass-card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Transformation Stats
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalTransformations">0</div>
+                    <div class="stat-label">Total Transformations</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="featuresCreated">0</div>
+                    <div class="stat-label">Features Created</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="columnsModified">0</div>
+                    <div class="stat-label">Columns Modified</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/feature_engineering.js') }}"></script>
+<script>
+let currentDataset = null;
+let currentDatasetData = null;
+let appliedTransformationsList = [];
+let previewTransformationData = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadDatasets();
+    loadAppliedTransformations();
+});
+
+async function loadDatasets() {
+    try {
+        const response = await api.get('/api/datasets');
+        if (response.success) {
+            const select = document.getElementById('datasetSelect');
+            select.innerHTML = '<option value="">Choose a dataset...</option>';
+            
+            response.data.forEach(dataset => {
+                const option = document.createElement('option');
+                option.value = dataset.id;
+                option.textContent = `${dataset.filename} (${dataset.num_rows} rows)`;
+                select.appendChild(option);
+            });
+        }
+    } catch (error) {
+        showToast('Error loading datasets', 'error');
+        console.error(error);
+    }
+}
+
+async function loadDataset() {
+    const datasetId = document.getElementById('datasetSelect').value;
+    if (!datasetId) {
+        currentDataset = null;
+        updateColumnSelectors([]);
+        document.getElementById('datasetInfo').style.display = 'none';
+        return;
+    }
+
+    try {
+        showLoading();
+        const response = await api.get(`/api/datasets/${datasetId}`);
+        
+        if (response.success) {
+            currentDataset = response.data;
+            currentDatasetData = response.data.preview;
+            
+            // Update dataset info
+            document.getElementById('datasetRows').textContent = currentDataset.num_rows;
+            document.getElementById('datasetColumns').textContent = currentDataset.num_columns;
+            document.getElementById('datasetSize').textContent = formatBytes(currentDataset.file_size);
+            document.getElementById('datasetInfo').style.display = 'block';
+            
+            // Update column selectors
+            updateColumnSelectors(currentDataset.column_names);
+            
+            // Load column information
+            await loadColumnInformation(datasetId);
+            
+            // Load applied transformations for this dataset
+            await loadAppliedTransformations(datasetId);
+            
+            // Enable apply all button
+            document.getElementById('applyAllBtn').disabled = false;
+            
+            showToast('Dataset loaded successfully', 'success', 2000);
+        }
+    } catch (error) {
+        showToast('Error loading dataset', 'error');
+        console.error(error);
+    } finally {
+        hideLoading();
+    }
+}
+
+function updateColumnSelectors(columns) {
+    const selectors = ['scalingColumns', 'encodingColumns', 'binningColumns', 'transformColumns'];
+    
+    selectors.forEach(selectorId => {
+        const selector = document.getElementById(selectorId);
+        selector.innerHTML = '';
+        
+        if (columns.length === 0) {
+            selector.innerHTML = '<option value="">Load dataset first...</option>';
+            return;
+        }
+        
+        columns.forEach(column => {
+            const option = document.createElement('option');
+            option.value = column;
+            option.textContent = column;
+            selector.appendChild(option);
+        });
+    });
+}
+
+async function loadColumnInformation(datasetId) {
+    try {
+        const response = await api.get(`/api/datasets/${datasetId}/columns`);
+        if (response.success) {
+            updateColumnInformation(response.data);
+        }
+    } catch (error) {
+        console.error('Error loading column information:', error);
+    }
+}
+
+function updateColumnInformation(columnData) {
+    const container = document.getElementById('columnInfo');
+    
+    container.innerHTML = columnData.map(col => `
+        <div class="column-info-item">
+            <div class="column-header">
+                <span class="column-name">${col.name}</span>
+                <span class="column-type badge badge-${getTypeColor(col.type)}">${col.type}</span>
+            </div>
+            <div class="column-stats">
+                <div class="stat-small">
+                    <span>Unique:</span> ${col.unique_count || 'N/A'}
+                </div>
+                <div class="stat-small">
+                    <span>Missing:</span> ${col.missing_count || 0}
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function getTypeColor(type) {
+    switch (type.toLowerCase()) {
+        case 'int64':
+        case 'float64':
+        case 'number': return 'primary';
+        case 'object':
+        case 'string': return 'secondary';
+        case 'datetime64': return 'info';
+        case 'bool': return 'success';
+        default: return 'secondary';
+    }
+}
+
+function switchTab(tabName) {
+    // Update active tab styling if needed
+    console.log('Switched to tab:', tabName);
+}
+
+async function applyScaling(event) {
+    event.preventDefault();
+    
+    const columns = Array.from(document.getElementById('scalingColumns').selectedOptions).map(opt => opt.value);
+    const method = document.getElementById('scalingMethod').value;
+    
+    if (!currentDataset || columns.length === 0) {
+        showToast('Please select a dataset and columns', 'warning');
+        return;
+    }
+    
+    try {
+        showLoading();
+        const response = await api.post(`/api/feature/scale/${currentDataset.id}`, {
+            columns: columns,
+            method: method
+        });
+        
+        if (response.success) {
+            showToast('Scaling applied successfully', 'success');
+            await loadAppliedTransformations(currentDataset.id);
+            updateTransformationStats();
+        }
+    } catch (error) {
+        showToast(`Error applying scaling: ${error.message}`, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function applyEncoding(event) {
+    event.preventDefault();
+    
+    const columns = Array.from(document.getElementById('encodingColumns').selectedOptions).map(opt => opt.value);
+    const method = document.getElementById('encodingMethod').value;
+    
+    if (!currentDataset || columns.length === 0) {
+        showToast('Please select a dataset and columns', 'warning');
+        return;
+    }
+    
+    try {
+        showLoading();
+        const response = await api.post(`/api/feature/encode/${currentDataset.id}`, {
+            columns: columns,
+            method: method
+        });
+        
+        if (response.success) {
+            showToast('Encoding applied successfully', 'success');
+            await loadAppliedTransformations(currentDataset.id);
+            updateTransformationStats();
+        }
+    } catch (error) {
+        showToast(`Error applying encoding: ${error.message}`, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function applyBinning(event) {
+    event.preventDefault();
+    
+    const columns = Array.from(document.getElementById('binningColumns').selectedOptions).map(opt => opt.value);
+    const method = document.getElementById('binningMethod').value;
+    const bins = parseInt(document.getElementById('binningBins').value);
+    
+    if (!currentDataset || columns.length === 0) {
+        showToast('Please select a dataset and columns', 'warning');
+        return;
+    }
+    
+    try {
+        showLoading();
+        const response = await api.post(`/api/feature/binning/${currentDataset.id}`, {
+            columns: columns,
+            method: method,
+            bins: bins
+        });
+        
+        if (response.success) {
+            showToast('Binning applied successfully', 'success');
+            await loadAppliedTransformations(currentDataset.id);
+            updateTransformationStats();
+        }
+    } catch (error) {
+        showToast(`Error applying binning: ${error.message}`, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function applyTransform(event) {
+    event.preventDefault();
+    
+    const columns = Array.from(document.getElementById('transformColumns').selectedOptions).map(opt => opt.value);
+    const method = document.getElementById('transformMethod').value;
+    
+    if (!currentDataset || columns.length === 0) {
+        showToast('Please select a dataset and columns', 'warning');
+        return;
+    }
+    
+    try {
+        showLoading();
+        const response = await api.post(`/api/feature/transform/${currentDataset.id}`, {
+            columns: columns,
+            method: method
+        });
+        
+        if (response.success) {
+            showToast('Transform applied successfully', 'success');
+            await loadAppliedTransformations(currentDataset.id);
+            updateTransformationStats();
+        }
+    } catch (error) {
+        showToast(`Error applying transform: ${error.message}`, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function previewTransformation(type) {
+    if (!currentDataset) {
+        showToast('Please select a dataset first', 'warning');
+        return;
+    }
+    
+    let columns, params;
+    
+    switch (type) {
+        case 'scaling':
+            columns = Array.from(document.getElementById('scalingColumns').selectedOptions).map(opt => opt.value);
+            params = { method: document.getElementById('scalingMethod').value };
+            break;
+        case 'encoding':
+            columns = Array.from(document.getElementById('encodingColumns').selectedOptions).map(opt => opt.value);
+            params = { method: document.getElementById('encodingMethod').value };
+            break;
+        case 'binning':
+            columns = Array.from(document.getElementById('binningColumns').selectedOptions).map(opt => opt.value);
+            params = { 
+                method: document.getElementById('binningMethod').value,
+                bins: parseInt(document.getElementById('binningBins').value)
+            };
+            break;
+        case 'transform':
+            columns = Array.from(document.getElementById('transformColumns').selectedOptions).map(opt => opt.value);
+            params = { method: document.getElementById('transformMethod').value };
+            break;
+    }
+    
+    if (columns.length === 0) {
+        showToast('Please select columns to preview', 'warning');
+        return;
+    }
+    
+    try {
+        showLoading();
+        const response = await api.post(`/api/feature/preview/${type}/${currentDataset.id}`, {
+            columns: columns,
+            ...params
+        });
+        
+        if (response.success) {
+            previewTransformationData = { type, columns, params, result: response.data };
+            displayPreview(response.data);
+            document.getElementById('confirmBtn').style.display = 'inline-block';
+        }
+    } catch (error) {
+        showToast(`Error previewing transformation: ${error.message}`, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+function displayPreview(previewData) {
+    const previewSection = document.getElementById('previewSection');
+    const previewContent = document.getElementById('previewContent');
+    
+    if (!previewData.before || !previewData.after) {
+        previewContent.innerHTML = '<p class="text-muted">No preview data available</p>';
+        previewSection.style.display = 'block';
+        return;
+    }
+    
+    previewContent.innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="text-muted">Before Transformation</h6>
+                <div class="preview-table">
+                    ${createPreviewTable(previewData.before)}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h6 class="text-muted">After Transformation</h6>
+                <div class="preview-table">
+                    ${createPreviewTable(previewData.after)}
+                </div>
+            </div>
+        </div>
+        <div class="mt-3">
+            <h6>Transformation Summary</h6>
+            <div class="summary-stats">
+                <div class="stat-small">
+                    <span>Columns Affected:</span> ${previewData.affected_columns || 'N/A'}
+                </div>
+                <div class="stat-small">
+                    <span>New Features:</span> ${previewData.new_features || 0}
+                </div>
+                <div class="stat-small">
+                    <span>Success Rate:</span> ${previewData.success_rate || '100%'}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    previewSection.style.display = 'block';
+}
+
+function createPreviewTable(data) {
+    if (!data || data.length === 0) {
+        return '<p class="text-muted">No data</p>';
+    }
+    
+    const columns = Object.keys(data[0]);
+    const rows = data.slice(0, 5); // Show first 5 rows
+    
+    return `
+        <div class="data-table-container">
+            <table class="table data-table">
+                <thead>
+                    <tr>
+                        ${columns.map(col => `<th>${col}</th>`).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows.map(row => `
+                        <tr>
+                            ${columns.map(col => `<td title="${row[col] || ''}">${row[col] || ''}</td>`).join('')}
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+async function confirmTransformation() {
+    if (!previewTransformationData) return;
+    
+    const { type, columns, params } = previewTransformationData;
+    
+    try {
+        showLoading();
+        let response;
+        
+        switch (type) {
+            case 'scaling':
+                response = await api.post(`/api/feature/scale/${currentDataset.id}`, {
+                    columns: columns,
+                    ...params
+                });
+                break;
+            case 'encoding':
+                response = await api.post(`/api/feature/encode/${currentDataset.id}`, {
+                    columns: columns,
+                    ...params
+                });
+                break;
+            case 'binning':
+                response = await api.post(`/api/feature/binning/${currentDataset.id}`, {
+                    columns: columns,
+                    ...params
+                });
+                break;
+            case 'transform':
+                response = await api.post(`/api/feature/transform/${currentDataset.id}`, {
+                    columns: columns,
+                    ...params
+                });
+                break;
+        }
+        
+        if (response.success) {
+            showToast('Transformation applied successfully', 'success');
+            await loadAppliedTransformations(currentDataset.id);
+            updateTransformationStats();
+            closePreview();
+        }
+    } catch (error) {
+        showToast(`Error applying transformation: ${error.message}`, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+function closePreview() {
+    document.getElementById('previewSection').style.display = 'none';
+    document.getElementById('confirmBtn').style.display = 'none';
+    previewTransformationData = null;
+}
+
+async function loadAppliedTransformations(datasetId = null) {
+    if (!datasetId && !currentDataset) return;
+    
+    const id = datasetId || currentDataset.id;
+    
+    try {
+        const response = await api.get(`/api/feature/list/${id}`);
+        if (response.success) {
+            appliedTransformationsList = response.data;
+            updateAppliedTransformations(response.data);
+            updateTransformationStats();
+        }
+    } catch (error) {
+        console.error('Error loading applied transformations:', error);
+    }
+}
+
+function updateAppliedTransformations(transformations) {
+    const container = document.getElementById('appliedTransformations');
+    
+    if (!transformations || transformations.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted">
+                <i class="fas fa-magic" style="font-size: 2rem;"></i>
+                <p class="mt-2">No transformations applied yet</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = transformations.map(transform => `
+        <div class="transformation-item">
+            <div class="transformation-header">
+                <div class="transformation-type">
+                    <i class="fas fa-${getTransformationIcon(transform.transformation)} me-2"></i>
+                    ${transform.transformation_type}
+                </div>
+                <span class="transformation-date">${timeAgo(transform.created_at)}</span>
+            </div>
+            <div class="transformation-details">
+                <div class="detail-item">
+                    <strong>Columns:</strong> ${transform.columns || 'N/A'}
+                </div>
+                <div class="detail-item">
+                    <strong>Parameters:</strong> ${JSON.stringify(transform.parameters || {})}
+                </div>
+            </div>
+            <div class="transformation-actions">
+                <button class="btn btn-sm btn-outline-danger" onclick="removeTransformation(${transform.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function getTransformationIcon(type) {
+    switch (type) {
+        case 'scaling': return 'expand-arrows-alt';
+        case 'encoding': return 'code';
+        case 'binning': return 'boxes';
+        case 'transform': return 'function';
+        default: return 'cog';
+    }
+}
+
+function updateTransformationStats() {
+    document.getElementById('totalTransformations').textContent = appliedTransformationsList.length;
+    document.getElementById('featuresCreated').textContent = appliedTransformationsList.reduce((sum, t) => sum + (t.features_created || 0), 0);
+    document.getElementById('columnsModified').textContent = new Set(appliedTransformationsList.flatMap(t => t.columns?.split(',') || [])).size;
+}
+
+async function removeTransformation(transformationId) {
+    modalManager.confirm(
+        'Remove Transformation',
+        'Are you sure you want to remove this transformation? This action cannot be undone.',
+        async function() {
+            try {
+                const response = await api.delete(`/api/feature/transformation/${transformationId}`);
+                if (response.success) {
+                    showToast('Transformation removed successfully', 'success');
+                    await loadAppliedTransformations(currentDataset.id);
+                }
+            } catch (error) {
+                showToast(`Error removing transformation: ${error.message}`, 'error');
+            }
+        }
+    );
+}
+
+async function applyAllTransformations() {
+    if (!currentDataset) {
+        showToast('Please select a dataset first', 'warning');
+        return;
+    }
+    
+    modalManager.confirm(
+        'Apply All Transformations',
+        'This will apply all pending transformations to your dataset. This process may take some time.',
+        async function() {
+            try {
+                showLoading();
+                const response = await api.post(`/api/feature/apply-all/${currentDataset.id}`);
+                
+                if (response.success) {
+                    showToast('All transformations applied successfully', 'success');
+                    await loadAppliedTransformations(currentDataset.id);
+                    updateTransformationStats();
+                }
+            } catch (error) {
+                showToast(`Error applying transformations: ${error.message}`, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+    );
+}
+
+function loadDatasetSelector() {
+    loadDatasets();
+    showToast('Dataset list refreshed', 'info', 2000);
+}
+
+function formatBytes(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function timeAgo(timestamp) {
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diffInSeconds = Math.floor((now - time) / 1000);
+    
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    return `${Math.floor(diffInSeconds / 86400)}d ago`;
+}
+</script>
+
+<style>
+.nav-tabs .nav-link {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+    margin-right: 0.25rem;
+    border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0;
+}
+
+.nav-tabs .nav-link:hover {
+    background: var(--glass-bg);
+    color: var(--text-primary);
+    border-color: var(--glass-border);
+}
+
+.nav-tabs .nav-link.active {
+    background: var(--glass-bg);
+    color: var(--text-primary);
+    border-bottom-color: var(--glass-bg);
+}
+
+.form-actions {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--glass-border);
+    display: flex;
+    gap: 0.5rem;
+}
+
+.dataset-info {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.info-item {
+    font-size: 0.9rem;
+}
+
+.info-item strong {
+    color: var(--text-primary);
+}
+
+.column-info-item {
+    padding: 0.75rem;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--border-radius-md);
+    margin-bottom: 0.5rem;
+    transition: all var(--transition-fast);
+}
+
+.column-info-item:hover {
+    background: var(--glass-bg);
+    border-color: var(--accent-blue);
+}
+
+.column-info-item:last-child {
+    margin-bottom: 0;
+}
+
+.column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.column-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.column-stats {
+    display: flex;
+    gap: 1rem;
+}
+
+.stat-small {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.stat-small span {
+    color: var(--text-muted);
+}
+
+.transformation-item {
+    padding: 1rem;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--border-radius-md);
+    margin-bottom: 0.75rem;
+    transition: all var(--transition-fast);
+}
+
+.transformation-item:hover {
+    background: var(--glass-bg);
+    border-color: var(--accent-blue);
+}
+
+.transformation-item:last-child {
+    margin-bottom: 0;
+}
+
+.transformation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.transformation-type {
+    font-weight: 600;
+    color: var(--text-primary);
+    text-transform: capitalize;
+}
+
+.transformation-date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.transformation-details {
+    margin-bottom: 0.5rem;
+}
+
+.detail-item {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.detail-item strong {
+    color: var(--text-primary);
+}
+
+.transformation-actions {
+    text-align: right;
+}
+
+.preview-table {
+    max-height: 300px;
+    overflow: auto;
+}
+
+.summary-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--glass-bg);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--glass-border);
+}
+
+.badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge-primary {
+    background: var(--accent-blue);
+    color: white;
+}
+
+.badge-secondary {
+    background: var(--text-muted);
+    color: white;
+}
+
+.badge-info {
+    background: var(--accent-teal);
+    color: white;
+}
+
+.badge-success {
+    background: var(--accent-green);
+    color: white;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.stat-item:last-child {
+    border-bottom: none;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+@media (max-width: 768px) {
+    .dataset-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .transformation-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .column-stats {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .summary-stats {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

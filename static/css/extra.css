@@ -1,0 +1,157 @@
+/* --- Additional General Styles --- */
+/* For better spacing and layout adjustments */
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .main-content {
+        padding-left: 230px; /* Slightly less padding on medium screens */
+    }
+    .header h1 {
+        font-size: 1.6em;
+    }
+    .component-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+    .component-card {
+        max-width: 180px;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Already handled by hamburger-btn media query, but good to have */
+    .sidebar {
+        width: 200px; /* Slightly smaller sidebar on mobile */
+    }
+    .header h1 {
+        font-size: 1.4em;
+    }
+    .container {
+        margin: 10px auto;
+        padding: 15px;
+    }
+}
+
+@media (max-width: 576px) {
+    body {
+        font-size: 14px; /* Smaller base font size on very small screens */
+    }
+    .sidebar {
+        width: 180px;
+    }
+    .header h1 {
+        font-size: 1.2em;
+    }
+    .welcome-section p {
+        font-size: 1em;
+    }
+    .component-grid {
+        grid-template-columns: 1fr; /* Stack cards vertically */
+        gap: 15px;
+    }
+    .component-card {
+        max-width: none; /* Allow cards to take full width */
+    }
+    .btn {
+        padding: 8px 15px;
+        font-size: 0.95em;
+    }
+}
+
+/* Specific styles for placeholder pages if needed */
+.placeholder-content {
+    text-align: center;
+    padding: 50px 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.placeholder-content h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+.placeholder-content p {
+    font-size: 1.1em;
+    color: #666;
+    line-height: 1.6;
+}
+
+/* Styling for forms if needed in future */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #333;
+}
+
+.form-group input[type="text"],
+.form-group input[type="file"],
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box; /* Important for width calculation */
+}
+
+.form-group input[type="file"] {
+    padding: 8px;
+}
+
+.dark-theme .form-group label {
+    color: #ccc;
+}
+.dark-theme .form-group input[type="text"],
+.dark-theme .form-group input[type="file"],
+.dark-theme .form-group select,
+.dark-theme .form-group textarea {
+    background-color: #34495e;
+    border: 1px solid #555;
+    color: #ecf0f1;
+}
+
+/* Tooltip styles (example) */
+.tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black; /* Example styling */
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%; /* Position the tooltip above the element */
+    left: 50%;
+    margin-left: -60px; /* Use half of the width to center */
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%; /* At the bottom of the tooltip */
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: black transparent transparent transparent;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}

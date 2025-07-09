@@ -1,0 +1,642 @@
+/* --- General Styles --- */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f7f6; /* Light background */
+    color: #333;
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 0;
+    color: #2c3e50; /* Darker heading color */
+}
+
+a {
+    color: #3498db; /* Primary blue for links */
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* --- Sidebar (Van Bar) --- */
+.sidebar {
+    width: 250px;
+    background-color: #2c3e50; /* Dark background for sidebar */
+    color: #ecf0f1; /* Light text */
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease-in-out;
+    transform: translateX(0);
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    position: fixed; /* Keep sidebar fixed */
+    height: 100%;
+    left: 0;
+    top: 0;
+    z-index: 1000; /* Ensure it's above main content */
+    overflow-y: auto; /* Allow scrolling if content overflows */
+}
+
+/* Hidden state for sidebar */
+.sidebar.hidden {
+    transform: translateX(-100%);
+}
+
+.sidebar-header {
+    padding: 20px;
+    background-color: #1a252f; /* Slightly darker header */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #34495e;
+}
+
+.sidebar-header h3 {
+    color: #ecf0f1;
+    margin: 0;
+    font-size: 1.4em;
+}
+
+.sidebar-header .close-btn {
+    background: none;
+    border: none;
+    color: #ecf0f1;
+    font-size: 2em;
+    cursor: pointer;
+    padding: 0 10px;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-grow: 1; /* Allow menu to take available space */
+}
+
+.sidebar-menu li {
+    padding: 0;
+}
+
+.sidebar-menu li a {
+    display: block;
+    padding: 15px 20px;
+    color: #bdc3c7; /* Lighter link color */
+    transition: background-color 0.2s ease, color 0.2s ease;
+    border-left: 5px solid transparent; /* For active state highlight */
+}
+
+.sidebar-menu li a:hover,
+.sidebar-menu li a.active { /* Add 'active' class via JS/backend */
+    background-color: #34495e; /* Hover/active background */
+    color: #ffffff; /* White text on hover/active */
+    border-left: 5px solid #3498db; /* Highlight color */
+}
+
+/* --- Main Content Area --- */
+.main-content {
+    flex-grow: 1;
+    transition: padding-left 0.3s ease-in-out;
+    background-color: #f4f7f6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding-left: 250px; /* Base padding when sidebar is visible */
+}
+
+/* When sidebar is hidden, remove the left padding */
+.main-content.sidebar-hidden {
+    padding-left: 0;
+}
+
+/* --- Header --- */
+.header {
+    background-color: #ffffff;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border-bottom: 1px solid #e0e0e0;
+    position: sticky; /* Make header sticky */
+    top: 0;
+    z-index: 999; /* Below sidebar */
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 1.8em;
+    color: #2c3e50;
+    flex-grow: 1; /* Allow title to take space */
+    text-align: center; /* Center the title */
+}
+
+/* --- Hamburger Button --- */
+.hamburger-btn {
+    background: none;
+    border: none;
+    font-size: 1.8em; /* Adjust size as needed */
+    cursor: pointer;
+    padding: 10px;
+    margin-right: 15px; /* Space between hamburger and title */
+    color: #3498db; /* Use your primary color for the hamburger icon */
+    display: block; /* Always visible */
+}
+
+/* --- Media Query Adjustments for Small Screens --- */
+@media (max-width: 768px) {
+    /* On small screens, the sidebar starts hidden */
+    .sidebar {
+        transform: translateX(-100%);
+        /* Ensure it overlays correctly */
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh; /* Full height */
+        z-index: 1000;
+        overflow-y: auto; /* Enable scrolling */
+    }
+
+    /* When sidebar is hidden (.hidden), main content has no left padding */
+    .main-content.sidebar-hidden {
+        padding-left: 0;
+    }
+    /* When sidebar is visible, main content padding is handled by the base style */
+
+    /* Ensure hamburger button is visible on mobile */
+    .hamburger-btn {
+        display: block; /* Already set globally, but confirming */
+    }
+
+    .header h1 {
+        text-align: left; /* Align title left when hamburger is present */
+        font-size: 1.5em;
+        margin-left: 10px; /* Add space between hamburger and title */
+    }
+
+    /* Adjust header to make sure hamburger and title are primary */
+    .header {
+        justify-content: flex-start; /* Align items to the start */
+    }
+
+    /* Specific adjustment for the sidebar when it becomes visible on mobile */
+    .sidebar:not(.hidden) {
+        transform: translateX(0); /* Ensure it slides in */
+        /* Content within the sidebar (links) should now be visible */
+    }
+}
+
+/* --- Container for main page content --- */
+.container {
+    padding: 20px;
+    flex-grow: 1; /* Allow content to fill available space */
+    max-width: 1200px; /* Limit width for better readability */
+    margin: 20px auto; /* Center the container */
+    width: 100%;
+    box-sizing: border-box; /* Include padding in width */
+}
+
+/* --- Buttons --- */
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    font-size: 1em;
+    text-align: center;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    margin: 5px;
+}
+
+.btn-primary {
+    background-color: #3498db;
+    color: white;
+    border-radius: 6px; /* Curved corners */
+    border: 2px solid #3498db; /* Border matches background */
+    padding: 10px 20px; /* Consistent padding */
+    font-size: 1em; /* Consistent font size */
+    margin-right: 8px; /* Add margin to create a gap between primary and secondary buttons */
+    margin-top: 2.5px; /* Add margin to create a gap between primary and secondary buttons */
+    margin-bottom: 2.5px; /* Add margin to create a gap between primary and secondary buttons */
+    text-decoration: none; /* Remove underline */
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+    color: white;
+    text-decoration: none;
+    border-color: #2980b9; /* Border color on hover */
+}
+/* i want a gap between primary and secondary but how */
+
+
+
+.btn-secondary {
+    background-color:#2980b9;
+    color: white;
+    border-radius: 6px; /* Curved corners */
+    border: 2px solid #2980b9; /* Border matches background */
+    padding: 10px 20px; /* Consistent padding */
+    font-size: 1em; /* Consistent font size */
+}
+
+.btn-secondary:hover {
+    background-color: #2980b9;
+    color: white;
+    text-decoration: none;
+    border-color: #2980b9; /* Border color on hover */
+}
+
+/* 🔁 Responsive spacing on small screens */
+@media (max-width: 600px) {
+    .btn {
+        display: block;
+        width: 100%;
+        margin: 8px 0;
+    }
+}
+
+/* --- Modified btn-small for the "Go" buttons --- */
+.component-card .btn-small { /* Target specifically for component cards */
+    padding: 8px 16px; /* Adjusted padding for a slightly larger button */
+    font-size: 1.1em;
+    border-radius: 6px; /* Curved corners */
+    background-color: #3498db; /* Your specified color */
+    color: white; /* Text color */
+    border: 2px solid #3498db; /* Border matches background */
+}
+
+.component-card .btn-small:hover {
+    background-color: #2980b9; /* Same color hover effect */
+    color: white;
+    border-color: #2980b9; /* Border color on hover */
+    text-decoration: none; /* Ensure no underline */
+}
+
+
+/* --- Index Page Specific Styles --- */
+.welcome-section {
+    text-align: center;
+    margin-bottom: 40px;
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.welcome-section h2 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+.welcome-section p {
+    font-size: 1.1em;
+    line-height: 1.6;
+    color: #555;
+    max-width: 700px;
+    margin: 0 auto 25px auto;
+}
+
+.cta-buttons a {
+    margin: 0 10px;
+    font-size: 1.2rem;
+}
+
+.component-overview h3 {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 1.6em;
+    color: #2c3e50;
+}
+
+.component-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 25px;
+    justify-items: center;
+}
+
+.component-card {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    text-align: center;
+    width: 100%;
+    max-width: 220px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Pushes button to bottom */
+}
+
+.component-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.component-card .icon {
+    font-size: 2.5em;
+    margin-bottom: 15px;
+    display: block;
+}
+
+.component-card h4 {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+    color: #2c3e50;
+}
+
+.component-card p {
+    font-size: 0.95em;
+    color: #666;
+    flex-grow: 1; /* Allows paragraph to take available space */
+    margin-bottom: 15px;
+}
+
+/* Specific styles for placeholder pages if needed */
+.placeholder-content {
+    text-align: center;
+    padding: 50px 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.placeholder-content h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+.placeholder-content p {
+    font-size: 1.1em;
+    color: #666;
+    line-height: 1.6;
+}
+
+
+/* ... (previous CSS content) ... */
+
+/* --- Upload Page Specific Styles --- */
+.upload-container {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    max-width: 800px; /* Slightly wider container */
+    margin: 20px auto;
+    text-align: center;
+}
+
+.upload-container h2 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 2em; /* Larger heading */
+}
+
+.upload-container p {
+    font-size: 1.1em;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.form-group {
+    margin-bottom: 25px;
+    text-align: left; /* Align form elements to the left */
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 10px; /* Increased margin */
+    font-weight: bold;
+    color: #333;
+    font-size: 1.1em; /* Larger labels */
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 1em;
+    color: #333; /* Ensure input text color is visible */
+}
+
+.form-group textarea {
+    resize: vertical; /* Allow vertical resizing */
+}
+
+/* Custom file input styling */
+.file-upload-label {
+    display: inline-block;
+    background-color: #3498db;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 1em;
+    margin-right: 15px; /* Space between button and file name */
+    border: 2px solid #3498db; /* Add border for consistency */
+}
+
+.file-upload-label:hover {
+    background-color: #2980b9;
+    color: white;
+    border-color: #2980b9;
+    text-decoration: none;
+}
+
+/* Hide the default file input */
+.form-group input[type="file"] {
+    display: none;
+}
+
+#file-name {
+    font-style: italic;
+    color: #777; /* Slightly darker placeholder */
+    font-size: 0.95em;
+    display: inline-block; /* Ensure it stays on the same line */
+    vertical-align: middle; /* Align with label */
+}
+
+/* Status message styling */
+.status-message {
+    margin-top: 20px;
+    font-weight: bold;
+    min-height: 1.5em; /* Reserve space */
+    font-size: 1.1em;
+    text-align: center;
+}
+
+/* Preview Section */
+.preview-section {
+    margin-top: 40px;
+    text-align: left; /* Content within preview section should be left-aligned */
+    background-color: #fdfdfd; /* Slightly different background for preview */
+    padding: 20px;
+    border-radius: 6px;
+    border: 1px solid #eee;
+}
+
+.preview-section h3 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #2c3e50;
+    font-size: 1.5em;
+}
+
+/* File Preview Table */
+.preview-table-container {
+    overflow-x: auto; /* Horizontal scroll for tables on small screens */
+    border-radius: 5px;
+    border: 1px solid #e0e0e0;
+    background-color: #fff; /* White background for the table itself */
+}
+
+.preview-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.preview-table th,
+.preview-table td {
+    border: 1px solid #e0e0e0;
+    padding: 12px 15px; /* More padding */
+    text-align: left;
+    font-size: 0.9em;
+    white-space: nowrap; /* Prevent text wrapping in cells */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Add ellipsis for long text */
+}
+
+.preview-table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    color: #555;
+    font-size: 1em; /* Slightly larger header font */
+}
+
+.preview-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9; /* Subtle striping */
+}
+
+.preview-table tbody tr:hover {
+    background-color: #f1f1f1; /* Hover effect */
+}
+
+/* Responsive adjustments for preview table */
+@media (max-width: 768px) {
+    .upload-container {
+        padding: 20px;
+    }
+    .upload-container h2 {
+        font-size: 1.8em;
+    }
+    .form-group label {
+        font-size: 1em;
+    }
+    .file-upload-label, .btn {
+        padding: 10px 15px;
+        font-size: 0.95em;
+    }
+    .preview-section {
+        padding: 15px;
+    }
+    .preview-table th,
+    .preview-table td {
+        padding: 8px 10px;
+        font-size: 0.85em;
+    }
+    .preview-table th {
+        font-size: 0.9em;
+    }
+}
+
+/* Dark Theme Overrides for Upload */
+body.dark-theme .upload-container {
+    background-color: #2c3e50;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    border: 1px solid #34495e;
+}
+
+body.dark-theme .upload-container h2 {
+    color: #ffffff;
+}
+
+body.dark-theme .upload-container p {
+    color: #ccc;
+}
+
+body.dark-theme .form-group label {
+    color: #ccc;
+}
+
+body.dark-theme .form-group input[type="text"],
+body.dark-theme .form-group textarea {
+    background-color: #34495e;
+    border: 1px solid #555;
+    color: #ecf0f1;
+}
+
+body.dark-theme .file-upload-label {
+    background-color: #5dade2;
+    color: #2c3e50;
+    border: 2px solid #5dade2;
+}
+
+body.dark-theme .file-upload-label:hover {
+    background-color: #3498db;
+    border-color: #3498db;
+    color: white;
+}
+
+body.dark-theme #file-name {
+    color: #aaa;
+}
+
+body.dark-theme .status-message {
+    color: #eee; /* Adjust if success/error colors need overriding */
+}
+body.dark-theme .status-message[style*="red"] { /* Specific for error */
+    color: #ff6b6b; /* Bright red */
+}
+body.dark-theme .status-message[style*="green"] { /* Specific for success */
+    color: #50fa7b; /* Bright green */
+}
+
+body.dark-theme .preview-section {
+    background-color: #34495e;
+    border: 1px solid #444;
+}
+
+body.dark-theme .preview-section h3 {
+    color: #ffffff;
+}
+
+body.dark-theme .preview-table {
+    border: 1px solid #444;
+}
+
+body.dark-theme .preview-table th,
+body.dark-theme .preview-table td {
+    border: 1px solid #444;
+}
+
+body.dark-theme .preview-table th {
+    background-color: #3a4d5d; /* Darker header */
+    color: #eee;
+}
+
+body.dark-theme .preview-table tbody tr:nth-child(even) {
+    background-color: #30404f;
+}
+
+body.dark-theme .preview-table tbody tr:hover {
+    background-color: #3a4d5d;
+}
