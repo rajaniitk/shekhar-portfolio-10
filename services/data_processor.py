@@ -30,8 +30,8 @@ class DataProcessor:
             
             filename = secure_filename(file.filename)
             file_path = os.path.join(self.upload_folder, filename)
-            file.save(file_path)
             
+            # Note: File is already saved by the route, so we just parse it
             # Parse the file
             df = self.parse_file(file_path, filename)
             if df is None:
@@ -55,7 +55,7 @@ class DataProcessor:
                     'filename': file.filename,
                     'rows': len(df),
                     'columns': len(df.columns),
-                    'file_size': os.path.getsize(file_path),
+                    'file_size': os.path.getsize(file_path) if os.path.exists(file_path) else 0,
                     'missing_values': missing_values,
                     'data_types': data_types,
                     'column_names': df.columns.tolist()

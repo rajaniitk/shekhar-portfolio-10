@@ -42,18 +42,11 @@ document.addEventListener('DOMContentLoaded', () => {
             uploadStatus.style.color = '#888';
 
             try {
-                // *** GET THE URL FROM THE DATA ATTRIBUTE ***
-                const uploadUrl = uploadForm.getAttribute('data-action-url'); 
-                
-                if (!uploadUrl) {
-                    console.error('Upload URL not found in form data attribute.');
-                    uploadStatus.textContent = 'Configuration error: Upload URL missing.';
-                    uploadStatus.style.color = 'red';
-                    return; // Prevent fetch if URL is missing
-                }
+                // Use the correct API route for upload
+                const uploadUrl = '/api/data/upload';
 
-                // POST the form data to the URL retrieved from the attribute
-                const response = await fetch(uploadUrl, { // <<< USE THE URL FROM THE ATTRIBUTE
+                // POST the form data to the upload endpoint
+                const response = await fetch(uploadUrl, {
                     method: 'POST',
                     body: formData
                     // 'Content-Type' is automatically set by FormData for multipart/form-data

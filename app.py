@@ -1,6 +1,6 @@
 import os
 import logging
-from flask import Flask, jsonify, request
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -64,7 +64,7 @@ app.register_blueprint(visualization_engine_bp)
 app.register_blueprint(column_analysis_bp)
 app.register_blueprint(comparison_bp)
 
-# Main routes
+# Main routes - only page routes, no API routes
 from flask import render_template, redirect, url_for
 
 @app.route('/')
@@ -115,106 +115,6 @@ def reports():
 def insights():
     return render_template('insights.html')
 
-# API Routes for dataset management
-@app.route('/api/datasets', methods=['GET'])
-def get_datasets():
-    """Get all datasets"""
-    try:
-        from models import Dataset
-        datasets = Dataset.query.all()
-        
-        dataset_list = []
-        for dataset in datasets:
-            dataset_list.append({
-                'id': dataset.id,
-                'name': dataset.original_filename,
-                'filename': dataset.filename,
-                'rows': dataset.num_rows,
-                'columns': dataset.num_columns,
-                'file_size': dataset.file_size,
-                'upload_date': dataset.upload_timestamp.isoformat() if dataset.upload_timestamp else None
-            })
-        
-        return jsonify({'success': True, 'datasets': dataset_list})
-    
-    except Exception as e:
-        logging.error(f"Error fetching datasets: {str(e)}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/dataset/<int:dataset_id>/info', methods=['GET'])
-def get_dataset_info(dataset_id):
-    """Get detailed information about a specific dataset"""
-    try:
-        from models import Dataset
-        dataset = Dataset.query.get_or_404(dataset_id)
-        
-        return jsonify({
-            'success': True,
-            'dataset': {
-                'id': dataset.id,
-                'name': dataset.original_filename,
-                'filename': dataset.filename,
-                'rows': dataset.num_rows,
-                'columns': dataset.num_columns,
-                'file_size': dataset.file_size,
-                'column_names': dataset.column_names,
-                'column_types': dataset.column_types,
-                'missing_values': dataset.missing_values,
-                'upload_date': dataset.upload_timestamp.isoformat() if dataset.upload_timestamp else None
-            }
-        })
-    
-    except Exception as e:
-        logging.error(f"Error fetching dataset info: {str(e)}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/dataset/<int:dataset_id>/preview', methods=['GET'])
-def get_dataset_preview(dataset_id):
-    """Get preview data for a specific dataset"""
-    try:
-        from models import Dataset
-        from services.data_processor import DataProcessor
-        
-        dataset = Dataset.query.get_or_404(dataset_id)
-        processor = DataProcessor()
-        
-        preview_result = processor.get_preview(dataset.file_path)
-        
-        if preview_result.get('success'):
-            return jsonify(preview_result)
-        else:
-            return jsonify({'success': False, 'error': preview_result.get('error', 'Unknown error')}), 500
-    
-    except Exception as e:
-        logging.error(f"Error fetching dataset preview: {str(e)}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/dataset/<int:dataset_id>/sample', methods=['GET'])
-def get_dataset_sample(dataset_id):
-    """Get sample data for a specific dataset"""
-    try:
-        from models import Dataset
-        from services.data_processor import DataProcessor
-        
-        dataset = Dataset.query.get_or_404(dataset_id)
-        processor = DataProcessor()
-        
-        sample_result = processor.get_sample_data(dataset.file_path)
-        
-        if sample_result.get('success'):
-            return jsonify(sample_result)
-        else:
-            return jsonify({'success': False, 'error': sample_result.get('error', 'Unknown error')}), 500
-    
-    except Exception as e:
-        logging.error(f"Error fetching dataset sample: {str(e)}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/health', methods=['GET'])
-def health_check():
-    """Health check endpoint"""
-    return jsonify({'status': 'healthy', 'message': 'EDA App is running'})
-
 # Error handlers
 @app.errorhandler(404)
 def not_found(error):
@@ -223,7 +123,7 @@ def not_found(error):
 @app.errorhandler(500)
 def internal_error(error):
     db.session.rollback()
-    return jsonify({'error': 'Internal server error'}), 500
+    return render_template('index.html'), 500
 
 with app.app_context():
     # Make sure to import the models here or their tables won't be created
